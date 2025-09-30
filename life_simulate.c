@@ -59,19 +59,19 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
     next[i] = 0; // Clear the next grid
   }
 
-  int y_dim = 0;
-  int x_dim = 0;
+  // int y_dim = 0;
+  // int x_dim = 0;
 
-    for (;y_dim < grid_dim && current[y_dim * grid_dim + x_dim] == 0; y_dim++)
-    {
-      for (x_dim = 0; x_dim < grid_dim && current[y_dim * grid_dim + x_dim] == 0; x_dim++)
-      {
-        ;
-      }
-    }
-    y_dim -= grid_dim;
+  //   for (;y_dim < grid_dim && current[y_dim * grid_dim + x_dim] == 0; y_dim++)
+  //   {
+  //     for (x_dim = 0; x_dim < grid_dim && current[y_dim * grid_dim + x_dim] == 0; x_dim++)
+  //     {
+  //       ;
+  //     }
+  //   }
+  //   y_dim -= grid_dim;
 
-  for (uint32_t y = 0; y < y_dim; y++)
+  for (uint32_t y = 0; y < grid_dim; y++)
   {
     for (uint32_t x = 0; x < grid_dim; x++)
     {
