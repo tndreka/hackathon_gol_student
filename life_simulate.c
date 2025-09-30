@@ -24,9 +24,9 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
  static uint8_t *grid = NULL;
  static int first_call = 1;
  static uint32_t current_grid = 0;
- static uint32_t store_grid = 0;
+ static uint32_t store_grid_dim = 0;
 
-  if (!grid || current_grid != grid_dim)
+  if (!grid || store_grid_dim != grid_dim)
   {
     if(grid)
       VirtualFree(grid, 0, MEM_RELEASE);
@@ -34,26 +34,24 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
     grid = (uint8_t *)VirtualAlloc(NULL, total_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!grid)
       return NULL;
-      //grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    //printf("Failed to allocate memory for the grid.\n");
     for (uint32_t i = 0; i < grid_dim * grid_dim; i++)
     {
       grid[i] = 0;
     }
     current_grid = 0;
-    store_grid = grid_dim;
+    store_grid_dim = grid_dim;
     first_call = 1;
   }
   uint32_t grid_size = grid_dim * grid_dim;
   uint8_t *current = grid + (current_grid * grid_size);
-  uint8_t *next = grid + (store_grid * grid_size);
+  uint8_t *next = grid + ((1 - current_grid) * grid_size);
 
   if(first_call)
   {
     for (uint32_t i = 0; i < initial_point_count; i++)
     {
       start_coord_t c = initial_points[i];
-      grid[c.y * grid_dim + c.x] = 1;
+      current[c.y * grid_dim + c.x] = 1;
     }
     first_call = 0;
     return current;  
@@ -62,11 +60,6 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
   {
     next[i] = 0;
   }
-  // uint8_t *new_grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-  // if (!new_grid)
-  // {
-  //   return NULL;
-  // }
   for (uint32_t i = 0; i < grid_dim * grid_dim; i++)
   {
     next[i] = 0;
@@ -84,15 +77,15 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
         {
           if (dx == 0 && dy == 0)
             continue; 
-          // uint32_t nx = (x + dx + grid_dim) % grid_dim;
-          // uint32_t ny = (y + dy + grid_dim) % grid_dim;
-          int32_t temp_x = (int32_t)x + dx;
-          int32_t temp_y = (int32_t)y + dy;
+          uint32_t nx = (x + dx + grid_dim) % grid_dim;
+          uint32_t ny = (y + dy + grid_dim) % grid_dim;
+          // int32_t temp_x = (int32_t)x + dx;
+          // int32_t temp_y = (int32_t)y + dy;
           
-          uint32_t nx = ((temp_x % (int32_t)grid_dim) + grid_dim) % grid_dim;
-          uint32_t ny = ((temp_y % (int32_t)grid_dim) + grid_dim) % grid_dim;
+          // uint32_t nx = ((temp_x % (int32_t)grid_dim) + grid_dim) % grid_dim;
+          // uint32_t ny = ((temp_y % (int32_t)grid_dim) + grid_dim) % grid_dim;
          
-          live_neighbors += grid[ny * grid_dim + nx];
+          live_neighbors += current[ny * grid_dim + nx];
         }
       }
       if (current_cell == 1)
