@@ -4,6 +4,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define UNICODE
 #include <windows.h>
+#include <stdio.h>
 #pragma(pop)
 
 #pragma warning(disable :5045)
@@ -17,6 +18,60 @@ typedef struct
 uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_t initial_point_count)
 {
   //TODO: Implement this function!
-  return 0;
+  /*
+    1. Allocate a grid of size grid_dim x grid_dim using VirtualAlloc.
+  */
+  uint8_t *grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim * sizeof(uint8_t), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+  if (!grid)
+  {
+    //printf("Failed to allocate memory for the grid.\n");
+    return NULL;
+  }  
+  for (uint32_t i = 0; i < initial_point_count; i++)
+  {
+    start_coord_t c = initial_points[i];
+    grid[c.y * grid_dim + c.x] = 1;
+  }
+  uint8_t *new_grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+  if (!new_grid)
+  {
+    //printf("Failed to allocate memory for the new grid.\n");
+    return NULL;
+  }
+  for (uint32_t y = 0; y < grid_dim; y++)
+  {
+    for (uint32_t x = 0; x < grid_dim; x++)
+    {
+      uint8_t live_neighbors = 0;
+      uint8_t current_cell = grid[y * grid_dim + x];
+      for (int dy = -1; dy <= 1; dy++)
+      {
+        for (int dx = -1; dx <= 1; dx++)
+        {
+          if (dx == 0 && dy == 0)
+            continue; 
+          uint32_t nx = (x + dx + grid_dim) % grid_dim;
+          uint32_t ny = (y + dy + grid_dim) % grid_dim;
+          live_neighbors += grid[ny * grid_dim + nx];
+        }
+      }
+      if (current_cell == 1)
+      {
+        if (live_neighbors < 2 || live_neighbors > 3)
+          new_grid[y * grid_dim + x] = 0;
+        else
+          new_grid[y * grid_dim + x] = 1;
+      }
+      else
+      {
+        if (live_neighbors == 3)
+          new_grid[y * grid_dim + x] = 1;
+        else
+          new_grid[y * grid_dim + x] = 0;
+      }
+    }
+  }
+  return new_grid;
+
 }
 
