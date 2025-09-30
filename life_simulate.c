@@ -21,11 +21,12 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
   /*
     1. Allocate a grid of size grid_dim x grid_dim using VirtualAlloc.
   */
-  uint8_t *grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim * sizeof(uint8_t), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+ static uint8_t *grid = NULL;
+
   if (!grid)
   {
+    grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     //printf("Failed to allocate memory for the grid.\n");
-    return NULL;
   }  
   for (uint32_t i = 0; i < initial_point_count; i++)
   {
@@ -35,7 +36,6 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
   uint8_t *new_grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
   if (!new_grid)
   {
-    //printf("Failed to allocate memory for the new grid.\n");
     return NULL;
   }
   for (uint32_t y = 0; y < grid_dim; y++)
@@ -71,7 +71,8 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
       }
     }
   }
+  // VirtualFree(grid, 0, MEM_RELEASE);
+  grid = new_grid;
   return new_grid;
-
 }
 
