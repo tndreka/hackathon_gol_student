@@ -23,16 +23,31 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
   */
  static uint8_t *grid = NULL;
  static int first_call = 1;
+ static uint32_t current_grid = 0;
+ static uint32_t store_grid = 0;
 
-  if (!grid)
+  if (!grid || current_grid != grid_dim)
   {
-    grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if(grid)
+      VirtualFree(grid, 0, MEM_RELEASE);
+    size_t total_size = 2 * grid_dim * grid_dim * sizeof(uint8_t);
+    grid = (uint8_t *)VirtualAlloc(NULL, total_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (!grid)
+      return NULL;
+      //grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     //printf("Failed to allocate memory for the grid.\n");
     for (uint32_t i = 0; i < grid_dim * grid_dim; i++)
     {
       grid[i] = 0;
     }
+    current_grid = 0;
+    store_grid = grid_dim;
+    first_call = 1;
   }
+  uint32_t grid_size = grid_dim * grid_dim;
+  uint8_t *current = grid + (current_grid * grid_size);
+  uint8_t *next = grid + (store_grid * grid_size);
+
   if(first_call)
   {
     for (uint32_t i = 0; i < initial_point_count; i++)
@@ -41,24 +56,28 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
       grid[c.y * grid_dim + c.x] = 1;
     }
     first_call = 0;
-    return grid;  
-  }  
-  uint8_t *new_grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-  if (!new_grid)
-  {
-    return NULL;
+    return current;  
   }
   for (uint32_t i = 0; i < grid_dim * grid_dim; i++)
   {
-    new_grid[i] = 0;
+    next[i] = 0;
   }
-  
+  // uint8_t *new_grid = (uint8_t *)VirtualAlloc(NULL, grid_dim * grid_dim, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+  // if (!new_grid)
+  // {
+  //   return NULL;
+  // }
+  for (uint32_t i = 0; i < grid_dim * grid_dim; i++)
+  {
+    next[i] = 0;
+  }
+
   for (uint32_t y = 0; y < grid_dim; y++)
   {
     for (uint32_t x = 0; x < grid_dim; x++)
     {
       uint8_t live_neighbors = 0;
-      uint8_t current_cell = grid[y * grid_dim + x];
+      uint8_t current_cell = current[y * grid_dim + x];
       for (int dy = -1; dy <= 1; dy++)
       {
         for (int dx = -1; dx <= 1; dx++)
@@ -79,21 +98,21 @@ uint8_t *simulate_life(uint32_t grid_dim, start_coord_t *initial_points, uint32_
       if (current_cell == 1)
       {
         if (live_neighbors < 2 || live_neighbors > 3)
-          new_grid[y * grid_dim + x] = 0;
+          next[y * grid_dim + x] = 0;
         else
-          new_grid[y * grid_dim + x] = 1;
+          next[y * grid_dim + x] = 1;
       }
       else
       {
         if (live_neighbors == 3)
-          new_grid[y * grid_dim + x] = 1;
+          next[y * grid_dim + x] = 1;
         else
-          new_grid[y * grid_dim + x] = 0;
+          next[y * grid_dim + x] = 0;
       }
     }
   }
   // VirtualFree(grid, 0, MEM_RELEASE);
-  grid = new_grid;
-  return new_grid;
+  current_grid = 1 - current_grid;
+  return grid + (current_grid * grid_size);
 }
 
